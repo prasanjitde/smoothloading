@@ -2,6 +2,7 @@ package com.prasanjit.smoothloadinglib;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -26,7 +27,6 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
 
     String TAG = getClass().getName();
     private Paint backgroundPaint, paintText, linePaint;
-    // private int size = 640;
     String labelPaint = "Some text";
     String labelPaintLoad = "Loading...";
     int cornerRadius;
@@ -37,6 +37,10 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
     boolean isAnimated = false;
     int repeatCounter = 0;
     Context context;
+    int backgroundColor, textColor, loadingCount;
+    String textForButton, textForLoading, textForError;
+
+    private OnSmoothLoadingClickEventListener loadingClickEventListener;
 
     public SmoothLoadingView(Context context) {
         super(context);
@@ -50,10 +54,32 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
         init(attrs);
     }
 
+    public interface OnSmoothLoadingClickEventListener{
+        void onSmoothButtonClicked(SmoothLoadingView view);
+        void onSmoothAnimateCompleted(SmoothLoadingView view);
+    }
+
+    public void setOnSmoothLoadingClickEventListener(OnSmoothLoadingClickEventListener loadingClickEventListener){
+        this.loadingClickEventListener = loadingClickEventListener;
+    }
+
     private void init(AttributeSet attrs) {
+
         backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paintText = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paintText.setColor(Color.WHITE);
+
+        TypedArray ta = getContext().obtainStyledAttributes(attrs, R.styleable.SmoothLoadingView);
+        backgroundColor = ta.getColor(R.styleable.SmoothLoadingView_button_background, Color.GREEN);
+        textColor = ta.getColor(R.styleable.SmoothLoadingView_button_text_color, Color.WHITE);
+        textForButton = ta.getString(R.styleable.SmoothLoadingView_button_text);
+        textForLoading = ta.getString(R.styleable.SmoothLoadingView_button_text_loading);
+        textForError = ta.getString(R.styleable.SmoothLoadingView_button_text_error);
+        loadingCount = ta.getInt(R.styleable.SmoothLoadingView_button_loading_count, 10);
+
+        backgroundPaint.setColor(backgroundColor);
+        paintText.setColor(textColor);
+        ta.recycle();
+
         // text size of 16 sp
         paintText.setTextSize(Math.round(16f * getResources().getDisplayMetrics().scaledDensity));
 
@@ -67,7 +93,6 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        backgroundPaint.setColor(getResources().getColor(android.R.color.holo_green_light));
         // paint.setStyle(Paint.Style.FILL);
 
         // float radius = size / 2f;
@@ -76,8 +101,8 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
 
         int offset = 32;
 
-        actualWidth = canvas.getWidth();
-        actualHeight = canvas.getHeight();
+        actualWidth = getResources().getDisplayMetrics().widthPixels;
+        actualHeight = getResources().getDisplayMetrics().heightPixels;
 
         // horizontal center
         final float centerX = actualWidth * 0.5f;
@@ -102,11 +127,11 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
         // canvas.drawRect(0 , 0, 480 , 196, paint);
         // drawLabel(canvas);
         if(isAnimated) {
-            // drawText(canvas, paintText, labelPaintLoad);
-            drawTextAnother(canvas, paintText, labelPaintLoad, centerX, baselineY);
+            drawText(canvas, paintText, textForLoading);
+            // drawTextAnother(canvas, paintText, labelPaintLoad, centerX, baselineY);
         }else {
-            // drawText(canvas, paintText, labelPaint);
-            drawTextAnother(canvas, paintText, labelPaint, centerX, baselineY);
+            drawText(canvas, paintText, textForButton);
+            // drawTextAnother(canvas, paintText, textForButton, centerX, baselineY);
         }
     }
 
@@ -117,7 +142,7 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
     }
 
     private int measureHeight(int measureSpec) {
-        Log.i(TAG, "MeasureSpec height " + measureSpec);
+        // Log.i(TAG, "MeasureSpec height " + measureSpec);
         //determine height
         int size = getPaddingTop() + getPaddingBottom();
         size += paintText.getFontSpacing();
@@ -126,11 +151,11 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
     }
 
     private int measureWidth(int measureSpec) {
-        Log.i(TAG, "MeasureSpec width " + measureSpec);
+        // Log.i(TAG, "MeasureSpec width " + measureSpec);
         //determine width
         int size = getPaddingLeft() + getPaddingRight();
         Rect bounds = new Rect();
-        paintText.getTextBounds(labelPaint, 0, labelPaint.length(), bounds);
+        paintText.getTextBounds(textForButton, 0, textForButton.length(), bounds);
         size += bounds.width();
         Log.i(TAG, "Width " + size);
         return resolveSizeAndState(size, measureSpec, 0);
@@ -176,7 +201,7 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
 
     private void setAnimate(){
         repeatCounter++;
-        ValueAnimator widthAnimator = ValueAnimator.ofInt(1, actualWidth/8);
+        ValueAnimator widthAnimator = ValueAnimator.ofInt(1, canvasWidth/8);
         widthAnimator.setDuration(500);
         widthAnimator.setInterpolator(new DecelerateInterpolator());
         widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -186,9 +211,11 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
                 // vasHeight = (int) animation.getAnimatedValue();
                 SmoothLoadingView.this.setTranslationX((int) animation.getAnimatedValue());
                 Log.i(TAG, "Value " + (int) animation.getAnimatedValue());
-                if(actualWidth/8 == (int) animation.getAnimatedValue()){
-                    if(repeatCounter < 50) {
+                if(canvasWidth/8 == (int) animation.getAnimatedValue()){
+                    if(repeatCounter < loadingCount) {
                         setReverseAnimate();
+                    }else {
+                        setAnimateFast();
                     }
                 }
                 // SmoothLoadingView.this.setTranslationY((float) animation.getAnimatedValue());
@@ -202,7 +229,7 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
 
     private void setReverseAnimate(){
         repeatCounter++;
-        ValueAnimator widthAnimator = ValueAnimator.ofInt(actualWidth/8, 1);
+        ValueAnimator widthAnimator = ValueAnimator.ofInt(canvasWidth/8, 1);
         widthAnimator.setDuration(500);
         widthAnimator.setInterpolator(new DecelerateInterpolator());
         widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -213,7 +240,7 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
                 SmoothLoadingView.this.setTranslationX((int) animation.getAnimatedValue());
                 Log.i(TAG, "Value " + (int) animation.getAnimatedValue());
                 if(1 == (int) animation.getAnimatedValue()){
-                    if(repeatCounter < 50) {
+                    if(repeatCounter < loadingCount) {
                         setAnimate();
                     }else {
                         setAnimateFast();
@@ -237,7 +264,32 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 SmoothLoadingView.this.setTranslationX((int) animation.getAnimatedValue());
+                if(actualWidth == (int) animation.getAnimatedValue()){
+                    fadeOutFast();
+                }
                 SmoothLoadingView.this.invalidate();
+            }
+        });
+        // widthAnimator.setRepeatCount(5);
+        widthAnimator.start();
+        invalidate();
+    }
+
+    private void fadeOutFast(){
+        ValueAnimator widthAnimator = ValueAnimator.ofFloat(0f, 1f);
+        widthAnimator.setDuration(100);
+        widthAnimator.setInterpolator(new DecelerateInterpolator());
+        widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float fadeValue = (float) animation.getAnimatedValue();
+                SmoothLoadingView.this.setAlpha(fadeValue);
+                SmoothLoadingView.this.invalidate();
+                if((float) animation.getAnimatedValue() == 1f){
+                    if(loadingClickEventListener != null){
+                        loadingClickEventListener.onSmoothAnimateCompleted(SmoothLoadingView.this);
+                    }
+                }
             }
         });
         // widthAnimator.setRepeatCount(5);
@@ -287,6 +339,12 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
 
     @Override
     public void onClick(View view) {
+        Log.i(TAG, "On click");
+
+        if(loadingClickEventListener != null){
+            loadingClickEventListener.onSmoothButtonClicked(SmoothLoadingView.this);
+        }
+
         if(isAnimated == false) {
             isAnimated = true;
             setAnimate();
@@ -294,5 +352,9 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
         }else {
             // do nothing
         }
+    }
+
+    public void setComplete(){
+
     }
 }

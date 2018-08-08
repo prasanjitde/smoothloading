@@ -15,11 +15,20 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         SmoothLoadingView btnLoad = findViewById(R.id.btn_load);
-        btnLoad.setOnClickListener(new View.OnClickListener() {
+        // SmoothLoadingView btnLoad = new SmoothLoadingView(this);
+
+        btnLoad.setOnSmoothLoadingClickEventListener(new SmoothLoadingView.OnSmoothLoadingClickEventListener() {
             @Override
-            public void onClick(View view) {
-                Toast.makeText(getApplicationContext(), "Smooth loading view", Toast.LENGTH_SHORT).show();
+            public void onSmoothButtonClicked(SmoothLoadingView view) {
+                Toast.makeText(getApplicationContext(), "Smooth loading started", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onSmoothAnimateCompleted(SmoothLoadingView view) {
+                Toast.makeText(getApplicationContext(), "Smooth loading ended", Toast.LENGTH_SHORT).show();
             }
         });
+
+        btnLoad.setComplete();
     }
 }

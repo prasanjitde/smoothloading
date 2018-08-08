@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="SmoothLoadingView">
+        <attr name="button_background" format="color"/>
+        <attr name="button_text_color" format="color"/>
+        <attr name="button_text" format="string"/>
+        <attr name="button_text_loading" format="string"/>
+        <attr name="button_text_error" format="string"/>
+        <attr name="button_loading_count" format="integer"/>
+    </declare-styleable>
+</resources>
