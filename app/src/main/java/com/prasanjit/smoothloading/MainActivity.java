@@ -14,7 +14,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        SmoothLoadingView btnLoad = findViewById(R.id.btn_load);
+        final SmoothLoadingView btnLoad = findViewById(R.id.btn_load);
         // SmoothLoadingView btnLoad = new SmoothLoadingView(this);
 
         btnLoad.setOnSmoothLoadingClickEventListener(new SmoothLoadingView.OnSmoothLoadingClickEventListener() {
@@ -27,8 +27,11 @@ public class MainActivity extends AppCompatActivity {
             public void onSmoothAnimateCompleted(SmoothLoadingView view) {
                 Toast.makeText(getApplicationContext(), "Smooth loading ended", Toast.LENGTH_SHORT).show();
             }
-        });
 
-        btnLoad.setComplete();
+            @Override
+            public void onSmoothAnimationStopped(SmoothLoadingView view) {
+                Toast.makeText(getApplicationContext(), "Smooth loading ended", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

@@ -35,6 +35,7 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
     int actualWidth;
     int actualHeight;
     boolean isAnimated = false;
+    boolean isStopCalled;
     int repeatCounter = 0;
     Context context;
     int backgroundColor, textColor, loadingCount;
@@ -57,6 +58,7 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
     public interface OnSmoothLoadingClickEventListener{
         void onSmoothButtonClicked(SmoothLoadingView view);
         void onSmoothAnimateCompleted(SmoothLoadingView view);
+        void onSmoothAnimationStopped(SmoothLoadingView view);
     }
 
     public void setOnSmoothLoadingClickEventListener(OnSmoothLoadingClickEventListener loadingClickEventListener){
@@ -201,140 +203,176 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
 
     private void setAnimate(){
         repeatCounter++;
-        ValueAnimator widthAnimator = ValueAnimator.ofInt(1, canvasWidth/8);
-        widthAnimator.setDuration(500);
-        widthAnimator.setInterpolator(new DecelerateInterpolator());
-        widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                // canvasWidth = (int) animation.getAnimatedValue();
-                // vasHeight = (int) animation.getAnimatedValue();
-                SmoothLoadingView.this.setTranslationX((int) animation.getAnimatedValue());
-                Log.i(TAG, "Value " + (int) animation.getAnimatedValue());
-                if(canvasWidth/8 == (int) animation.getAnimatedValue()){
-                    if(repeatCounter < loadingCount) {
-                        setReverseAnimate();
-                    }else {
-                        setAnimateFast();
+        ValueAnimator widthAnimator = ValueAnimator.ofInt(1, canvasWidth / 8);
+        if(isStopCalled){
+            if(widthAnimator != null)
+                widthAnimator.end();
+            invalidate();
+        }else {
+            widthAnimator.setDuration(500);
+            widthAnimator.setInterpolator(new DecelerateInterpolator());
+            widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    // canvasWidth = (int) animation.getAnimatedValue();
+                    // vasHeight = (int) animation.getAnimatedValue();
+                    SmoothLoadingView.this.setTranslationX((int) animation.getAnimatedValue());
+                    if (canvasWidth / 8 == (int) animation.getAnimatedValue()) {
+                        if (repeatCounter < loadingCount) {
+                            setReverseAnimate();
+                        } else {
+                            setAnimateFast();
+                        }
                     }
+                    // SmoothLoadingView.this.setTranslationY((float) animation.getAnimatedValue());
+                    SmoothLoadingView.this.invalidate();
                 }
-                // SmoothLoadingView.this.setTranslationY((float) animation.getAnimatedValue());
-                SmoothLoadingView.this.invalidate();
-            }
-        });
-        // widthAnimator.setRepeatCount(5);
-        widthAnimator.start();
-        invalidate();
+            });
+            // widthAnimator.setRepeatCount(5);
+            widthAnimator.start();
+            invalidate();
+        }
     }
 
     private void setReverseAnimate(){
         repeatCounter++;
         ValueAnimator widthAnimator = ValueAnimator.ofInt(canvasWidth/8, 1);
-        widthAnimator.setDuration(500);
-        widthAnimator.setInterpolator(new DecelerateInterpolator());
-        widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                // canvasWidth = (int) animation.getAnimatedValue();
-                // vasHeight = (int) animation.getAnimatedValue();
-                SmoothLoadingView.this.setTranslationX((int) animation.getAnimatedValue());
-                Log.i(TAG, "Value " + (int) animation.getAnimatedValue());
-                if(1 == (int) animation.getAnimatedValue()){
-                    if(repeatCounter < loadingCount) {
-                        setAnimate();
-                    }else {
-                        setAnimateFast();
+        if(isStopCalled) {
+            if(widthAnimator != null)
+                widthAnimator.end();
+            invalidate();
+        } else {
+            widthAnimator.setDuration(500);
+            widthAnimator.setInterpolator(new DecelerateInterpolator());
+            widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    // canvasWidth = (int) animation.getAnimatedValue();
+                    // vasHeight = (int) animation.getAnimatedValue();
+                    SmoothLoadingView.this.setTranslationX((int) animation.getAnimatedValue());
+                    Log.i(TAG, "Value " + (int) animation.getAnimatedValue());
+                    if (1 == (int) animation.getAnimatedValue()) {
+                        if (repeatCounter < loadingCount) {
+                            setAnimate();
+                        } else {
+                            setAnimateFast();
+                        }
                     }
+                    // SmoothLoadingView.this.setTranslationY((float) animation.getAnimatedValue());
+                    SmoothLoadingView.this.invalidate();
                 }
-                // SmoothLoadingView.this.setTranslationY((float) animation.getAnimatedValue());
-                SmoothLoadingView.this.invalidate();
-            }
-        });
-        // widthAnimator.setRepeatCount(5);
-        widthAnimator.start();
-        invalidate();
+            });
+            // widthAnimator.setRepeatCount(5);
+            widthAnimator.start();
+            invalidate();
+        }
     }
 
     private void setAnimateFast(){
         repeatCounter++;
         ValueAnimator widthAnimator = ValueAnimator.ofInt(1, actualWidth);
-        widthAnimator.setDuration(200);
-        widthAnimator.setInterpolator(new DecelerateInterpolator());
-        widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                SmoothLoadingView.this.setTranslationX((int) animation.getAnimatedValue());
-                if(actualWidth == (int) animation.getAnimatedValue()){
-                    fadeOutFast();
+        if(isStopCalled) {
+            if(widthAnimator != null)
+                widthAnimator.end();
+            invalidate();
+        }else {
+            widthAnimator.setDuration(200);
+            widthAnimator.setInterpolator(new DecelerateInterpolator());
+            widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    SmoothLoadingView.this.setTranslationX((int) animation.getAnimatedValue());
+                    if (actualWidth == (int) animation.getAnimatedValue()) {
+                        fadeOutFast();
+                    }
+                    SmoothLoadingView.this.invalidate();
                 }
-                SmoothLoadingView.this.invalidate();
-            }
-        });
-        // widthAnimator.setRepeatCount(5);
-        widthAnimator.start();
-        invalidate();
+            });
+            // widthAnimator.setRepeatCount(5);
+            widthAnimator.start();
+            invalidate();
+        }
     }
 
     private void fadeOutFast(){
-        ValueAnimator widthAnimator = ValueAnimator.ofFloat(0f, 1f);
-        widthAnimator.setDuration(100);
-        widthAnimator.setInterpolator(new DecelerateInterpolator());
-        widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float fadeValue = (float) animation.getAnimatedValue();
-                SmoothLoadingView.this.setAlpha(fadeValue);
-                SmoothLoadingView.this.invalidate();
-                if((float) animation.getAnimatedValue() == 1f){
-                    if(loadingClickEventListener != null){
-                        loadingClickEventListener.onSmoothAnimateCompleted(SmoothLoadingView.this);
+        ValueAnimator fadeAnimator = ValueAnimator.ofFloat(0f, 1f);
+        if(isStopCalled) {
+            if(fadeAnimator != null)
+                fadeAnimator.end();
+            invalidate();
+        }else {
+            fadeAnimator.setDuration(100);
+            fadeAnimator.setInterpolator(new DecelerateInterpolator());
+            fadeAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    float fadeValue = (float) animation.getAnimatedValue();
+                    SmoothLoadingView.this.setAlpha(fadeValue);
+                    SmoothLoadingView.this.invalidate();
+                    if ((float) animation.getAnimatedValue() == 1f) {
+                        if (loadingClickEventListener != null) {
+                            isAnimated = false;
+                            loadingClickEventListener.onSmoothAnimateCompleted(SmoothLoadingView.this);
+                        }
                     }
                 }
-            }
-        });
-        // widthAnimator.setRepeatCount(5);
-        widthAnimator.start();
-        invalidate();
+            });
+            // fadeAnimator.setRepeatCount(5);
+            fadeAnimator.start();
+            invalidate();
+        }
     }
 
     private void fadeIn(){
-        ValueAnimator widthAnimator = ValueAnimator.ofFloat(0f, 1f);
-        widthAnimator.setDuration(10000);
-        widthAnimator.setInterpolator(new DecelerateInterpolator());
-        widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float fadeValue = (float) animation.getAnimatedValue();
-                SmoothLoadingView.this.setAlpha(fadeValue);
-                if(fadeValue == 1f){
-                    fadeOut();
+        ValueAnimator fadeAnimator = ValueAnimator.ofFloat(0f, 1f);
+        if(isStopCalled) {
+            if(fadeAnimator != null)
+                fadeAnimator.end();
+            invalidate();
+        }else {
+            fadeAnimator.setDuration(10000);
+            fadeAnimator.setInterpolator(new DecelerateInterpolator());
+            fadeAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    float fadeValue = (float) animation.getAnimatedValue();
+                    SmoothLoadingView.this.setAlpha(fadeValue);
+                    if (fadeValue == 1f) {
+                        fadeOut();
+                    }
+                    SmoothLoadingView.this.invalidate();
                 }
-                SmoothLoadingView.this.invalidate();
-            }
-        });
-        // widthAnimator.setRepeatCount(5);
-        widthAnimator.start();
-        invalidate();
+            });
+            // fadeAnimator.setRepeatCount(5);
+            fadeAnimator.start();
+            invalidate();
+        }
     }
 
     private void fadeOut(){
-        ValueAnimator widthAnimator = ValueAnimator.ofFloat(0f, 1f);
-        widthAnimator.setDuration(5000);
-        widthAnimator.setInterpolator(new DecelerateInterpolator());
-        widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float fadeValue = (float) animation.getAnimatedValue();
-                SmoothLoadingView.this.setAlpha(fadeValue);
-                if(fadeValue == 0.25f){
-                    fadeIn();
+        ValueAnimator fadeAnimator = ValueAnimator.ofFloat(0f, 1f);
+        if(isStopCalled) {
+            if(fadeAnimator != null)
+                fadeAnimator.end();
+            invalidate();
+        }else {
+            fadeAnimator.setDuration(5000);
+            fadeAnimator.setInterpolator(new DecelerateInterpolator());
+            fadeAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    float fadeValue = (float) animation.getAnimatedValue();
+                    SmoothLoadingView.this.setAlpha(fadeValue);
+                    if (fadeValue == 0.25f) {
+                        fadeIn();
+                    }
+                    SmoothLoadingView.this.invalidate();
                 }
-                SmoothLoadingView.this.invalidate();
-            }
-        });
-        // widthAnimator.setRepeatCount(5);
-        widthAnimator.start();
-        invalidate();
+            });
+            // fadeAnimator.setRepeatCount(5);
+            fadeAnimator.start();
+            invalidate();
+        }
     }
 
     @Override
@@ -355,6 +393,10 @@ public class SmoothLoadingView extends AppCompatTextView implements View.OnClick
     }
 
     public void setComplete(){
-
+        isStopCalled = true;
+        isAnimated = false;
+        if(loadingClickEventListener != null){
+            loadingClickEventListener.onSmoothAnimationStopped(SmoothLoadingView.this);
+        }
     }
 }

@@ -13,8 +13,8 @@
         android:layout_centerHorizontal="true"
         android:padding="32dp"
         app:button_background="@android:color/darker_gray"
-        app:button_loading_count="15"
-        app:button_text="Smooth loading button"
+        app:button_loading_count="25"
+        app:button_text="Smooth loading button with a BIG text"
         app:button_text_loading="It's loading..."
         app:button_text_color="@android:color/black" />
 
